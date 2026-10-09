@@ -1,0 +1,44 @@
+:host { display: block; min-height: 100vh; background: #f5f8ef; color: #174b43; }
+* { box-sizing: border-box; }
+.dashboard-header { min-height: 76px; padding: 12px clamp(20px, 6vw, 88px); display: flex; align-items: center; justify-content: space-between; background: #fffdf7; border-bottom: 1px solid #e3ebdd; }
+.dashboard-brand { color: #174b43; text-decoration: none; font: 700 20px 'Baloo 2', sans-serif; }
+.dashboard-brand span { display: inline-grid; width: 38px; height: 38px; place-items: center; margin-right: 8px; border-radius: 50%; background: #f4a83b; color: white; }
+.dashboard-brand b { color: #e86546; }
+.logout-button { padding: 10px 16px; border: 2px solid #d8e5d9; border-radius: 50px; background: white; color: #315b54; font-weight: 800; }
+.dashboard-content { width: min(100% - 40px, 1040px); margin: 0 auto; padding: 62px 0 90px; }
+.kicker { color: #d35b3e; font-size: 12px; font-weight: 900; letter-spacing: .12em; }
+.welcome h1 { margin: 9px 0; font: 800 clamp(30px, 5vw, 46px)/1.12 'Baloo 2', sans-serif; }
+.welcome p { margin: 0; color: #637b70; font-size: 17px; }
+.points-card { margin: 32px 0; padding: 26px 32px; display: flex; align-items: center; gap: 20px; border-radius: 24px; background: linear-gradient(120deg, #174b43, #287b5d); color: white; box-shadow: 0 12px 28px rgba(23, 75, 67, .14); }
+.points-icon { width: 62px; height: 62px; display: grid; place-items: center; flex: 0 0 auto; border-radius: 20px; background: #f4c552; font-size: 32px; }
+.points-card div { display: grid; gap: 1px; }
+.points-card div span { color: #c4ddd0; font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+.points-card div strong { font: 800 40px 'Baloo 2', sans-serif; }
+.points-card small { margin-left: auto; color: #d3e6dc; }
+.history-card { padding: 30px; border: 1px solid #e4eadf; border-radius: 24px; background: #fff; box-shadow: 0 8px 28px rgba(50, 76, 60, .05); }
+.history-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; padding-bottom: 18px; border-bottom: 1px solid #e9eee7; }
+.history-heading h2 { margin: 3px 0 0; font: 800 27px 'Baloo 2', sans-serif; }
+.history-count { color: #75877e; font-size: 13px; font-weight: 800; }
+.loading-state, .error-state, .empty-state { padding: 38px 10px; text-align: center; color: #6a7f75; }
+.error-state { color: #b43e31; }
+.empty-state span { font-size: 42px; }
+.empty-state h3 { margin: 9px 0 4px; color: #174b43; font: 800 22px 'Baloo 2', sans-serif; }
+.empty-state p { margin: 0; }
+.movement-row { padding: 17px 0; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #edf1eb; }
+.movement-row:last-child { border-bottom: 0; }
+.movement-icon { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 15px; background: #e9f6e9; color: #328b65; font-size: 24px; }
+.movement-details { min-width: 0; display: grid; gap: 4px; }
+.movement-details strong { color: #31564b; }
+.movement-details time { color: #829088; font-size: 12px; }
+.movement-points { margin-left: auto; color: #318458; white-space: nowrap; }
+@media (max-width: 560px) {
+  .dashboard-header { padding-inline: 16px; }
+  .dashboard-brand { font-size: 16px; }
+  .dashboard-content { width: min(100% - 28px, 1040px); padding-top: 38px; }
+  .points-card { padding: 20px; gap: 13px; }
+  .points-icon { width: 50px; height: 50px; font-size: 25px; }
+  .points-card div strong { font-size: 32px; }
+  .points-card small { display: none; }
+  .history-card { padding: 20px 16px; }
+  .history-heading h2 { font-size: 23px; }
+}

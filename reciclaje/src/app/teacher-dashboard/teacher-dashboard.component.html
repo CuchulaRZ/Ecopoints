@@ -1,0 +1,114 @@
+<main class="teacher-page">
+  <header class="teacher-header">
+    <a class="teacher-brand" href="/" aria-label="Volver al inicio"><span>♻</span> Eco<b>Points</b></a>
+    <button type="button" class="logout-button" (click)="logout.emit()">Cerrar sesión</button>
+  </header>
+
+  <section class="teacher-content">
+    <div class="teacher-welcome">
+      <div>
+        <span class="kicker">PANEL DOCENTE</span>
+        <h1>¡Hola, profe! 🌱</h1>
+        <p>Registra a tus alumnos y reconoce sus acciones por el planeta.</p>
+      </div>
+      <div class="teacher-actions">
+        <button class="winner-action" type="button" (click)="showWinner()" [disabled]="loadingWinner">
+          {{ loadingWinner ? 'Buscando…' : '🏆 Abrir telón' }}
+        </button>
+        <button class="secondary-action" type="button" (click)="openModal('student')">＋ Registrar alumno</button>
+        <button class="primary-action" type="button" [disabled]="students.length === 0" (click)="openModal('points')">⭐ Asignar puntos</button>
+      </div>
+    </div>
+
+    <div class="status-message" *ngIf="statusMessage" role="status">{{ statusMessage }}</div>
+    <div class="error-message" *ngIf="errorMessage && !modal" role="alert">{{ errorMessage }}</div>
+
+    <section class="student-card">
+      <div class="student-card-heading">
+        <div><span class="kicker">TU GRUPO</span><h2>Alumnos</h2></div>
+        <span class="student-count">{{ students.length }} alumnos</span>
+      </div>
+      <div class="loading-state" *ngIf="loading">Cargando alumnos…</div>
+      <div class="empty-state" *ngIf="!loading && students.length === 0">
+        <span>📚</span>
+        <h3>Tu lista empieza aquí</h3>
+        <p>Registra alumnos para poder reconocer sus acciones con puntos.</p>
+        <button type="button" class="secondary-action" (click)="openModal('student')">Registrar primer alumno</button>
+      </div>
+      <div class="table-wrap" *ngIf="!loading && students.length > 0">
+        <table>
+          <thead><tr><th>Alumno</th><th>ID</th><th>Puntos acumulados</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let student of students">
+              <td><span class="student-avatar">{{ student.nombreCompleto.charAt(0) }}</span><strong>{{ student.nombreCompleto }}</strong></td>
+              <td>{{ student.alumnoId }}</td>
+              <td><span class="points-pill">⭐ {{ student.puntosTotal }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+
+  <div class="curtain-overlay" *ngIf="showingCurtain" [class.is-open]="curtainOpen"
+       (click)="closeCurtain()">
+    <section class="curtain-stage" role="dialog" aria-modal="true" aria-labelledby="winner-title"
+             (click)="$event.stopPropagation()">
+      <button class="curtain-close" type="button" aria-label="Cerrar telón" (click)="closeCurtain()">×</button>
+      <div class="winner-reveal">
+        <span class="winner-crown" aria-hidden="true">🏆</span>
+        <span class="winner-kicker">CAMPEÓN DEL PLANETA · ÚLTIMOS 30 DÍAS</span>
+        <ng-container *ngIf="winner; else noWinner">
+          <h2 id="winner-title">{{ winner.nombreCompleto }}</h2>
+          <p class="winner-points">⭐ {{ winner.puntosTotal }} puntos</p>
+          <p class="winner-id">ID de alumno: {{ winner.alumnoId }}</p>
+        </ng-container>
+        <ng-template #noWinner>
+          <h2 id="winner-title">¡El telón espera a su estrella!</h2>
+          <p class="winner-points">Aún no hay puntos registrados en los últimos 30 días.</p>
+        </ng-template>
+      </div>
+      <div class="curtain curtain-left" aria-hidden="true"></div>
+      <div class="curtain curtain-right" aria-hidden="true"></div>
+      <div class="curtain-valance" aria-hidden="true"></div>
+      <button *ngIf="!curtainOpen" class="curtain-open" type="button" (click)="openCurtain()">
+        Haz clic para abrir el telón
+      </button>
+    </section>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="modal" (click)="closeModal()">
+    <section class="teacher-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <button class="modal-close" type="button" aria-label="Cerrar" (click)="closeModal()">×</button>
+      <span class="modal-kicker">{{ modal === 'student' ? 'NUEVO ALUMNO' : 'RECONOCER SU ESFUERZO' }}</span>
+      <h2>{{ modal === 'student' ? 'Registrar alumno' : 'Asignar puntos' }}</h2>
+      <p>{{ modal === 'student' ? 'Ingresa los datos del alumno para agregarlo a tu grupo. Su ID de 8 dígitos se generará automáticamente.' : 'Elige al alumno y cuéntanos por qué ganó estos puntos.' }}</p>
+
+      <form *ngIf="modal === 'student'" (ngSubmit)="registerStudent()">
+        <label for="student-name">Nombre</label>
+        <input id="student-name" name="studentName" type="text" maxlength="80" required [(ngModel)]="studentName">
+        <label for="student-surname">Apellido</label>
+        <input id="student-surname" name="studentSurname" type="text" maxlength="80" required [(ngModel)]="studentSurname">
+        <p class="modal-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+        <button class="primary-action modal-submit" type="submit" [disabled]="saving || !studentName.trim() || !studentSurname.trim()">
+          {{ saving ? 'Guardando…' : 'Guardar alumno' }}
+        </button>
+      </form>
+
+      <form *ngIf="modal === 'points'" (ngSubmit)="assignPoints()">
+        <label for="student-select">Alumno</label>
+        <select id="student-select" name="selectedStudentId" required [(ngModel)]="selectedStudentId">
+          <option *ngFor="let student of students" [ngValue]="student.alumnoId">{{ student.nombreCompleto }} · ID {{ student.alumnoId }}</option>
+        </select>
+        <label for="points">Puntos (1–10.000)</label>
+        <input id="points" name="points" type="number" min="1" max="10000" required [(ngModel)]="points">
+        <label for="reason">Motivo</label>
+        <textarea id="reason" name="reason" rows="3" maxlength="300" required [(ngModel)]="reason" placeholder="Ej. Separó correctamente los residuos"></textarea>
+        <p class="modal-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+        <button class="primary-action modal-submit" type="submit" [disabled]="saving || selectedStudentId === null || points < 1 || points > 10000 || !reason.trim()">
+          {{ saving ? 'Guardando…' : 'Guardar puntos' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</main>

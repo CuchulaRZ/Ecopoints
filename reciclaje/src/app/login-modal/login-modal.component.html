@@ -1,0 +1,32 @@
+<div class="modal-backdrop" (click)="closed.emit()">
+  <section
+    class="login-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="login-title"
+    (click)="$event.stopPropagation()">
+    <button class="modal-close" type="button" aria-label="Cerrar" (click)="closed.emit()">×</button>
+    <span class="modal-icon" aria-hidden="true">♻</span>
+    <span class="modal-kicker">¡Qué bueno verte!</span>
+    <h2 id="login-title">Ingresa con tu ID</h2>
+    <p>Escribe el ID que te asignó tu institución para abrir tu espacio.</p>
+    <form (ngSubmit)="submit()">
+      <label for="login-id">ID de alumno o docente</label>
+      <input
+        id="login-id"
+        name="identifier"
+        type="text"
+        autocomplete="username"
+        maxlength="80"
+        required
+        [(ngModel)]="identifier"
+        placeholder="Escribe tu ID">
+      <p class="form-error" *ngIf="errorMessage" role="alert">{{ errorMessage }}</p>
+      <button class="modal-submit" type="submit" [disabled]="busy || !identifier.trim()">
+        {{ busy ? 'Ingresando…' : 'Entrar a mi espacio' }}
+        <span aria-hidden="true">→</span>
+      </button>
+    </form>
+    <small>El acceso se habilita con el ID que registró tu institución.</small>
+  </section>
+</div>

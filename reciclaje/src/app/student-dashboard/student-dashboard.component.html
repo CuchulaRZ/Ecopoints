@@ -1,0 +1,47 @@
+<main class="dashboard-page">
+  <header class="dashboard-header">
+    <a class="dashboard-brand" href="/" aria-label="Volver al inicio">
+      <span>♻</span> Eco<b>Points</b>
+    </a>
+    <button type="button" class="logout-button" (click)="logout.emit()">Cerrar sesión</button>
+  </header>
+
+  <section class="dashboard-content">
+    <div class="welcome">
+      <span class="kicker">TU ESPACIO VERDE</span>
+      <h1>¡Hola, {{ dashboard?.nombreCompleto || 'cuidador del planeta' }}! 🌱</h1>
+      <p>Estos son los puntos que has ganado cuidando el planeta.</p>
+    </div>
+
+    <div class="points-card" *ngIf="dashboard as data">
+      <div class="points-icon">⭐</div>
+      <div><span>PUNTOS ACUMULADOS</span><strong>{{ data.puntosTotal }}</strong></div>
+      <small>ID de alumno: {{ data.alumnoId }}</small>
+    </div>
+
+    <section class="history-card">
+      <div class="history-heading">
+        <div><span class="kicker">TU PROGRESO</span><h2>Historial de puntos</h2></div>
+        <span class="history-count" *ngIf="dashboard">{{ dashboard.movimientos.length }} registros</span>
+      </div>
+
+      <div class="loading-state" *ngIf="loading">Cargando tus puntos…</div>
+      <div class="error-state" *ngIf="errorMessage" role="alert">{{ errorMessage }}</div>
+      <div class="empty-state" *ngIf="!loading && !errorMessage && dashboard?.movimientos?.length === 0">
+        <span>🌿</span>
+        <h3>Tu primera misión te espera</h3>
+        <p>Cuando tu profesor te asigne puntos, aparecerán aquí con su fecha.</p>
+      </div>
+      <div class="movement-list" *ngIf="!loading && dashboard?.movimientos?.length">
+        <article class="movement-row" *ngFor="let movement of dashboard?.movimientos">
+          <span class="movement-icon">♻</span>
+          <div class="movement-details">
+            <strong>{{ movement.motivo }}</strong>
+            <time [attr.datetime]="movement.fecha">{{ movement.fecha | date:'d MMM y, h:mm a' }}</time>
+          </div>
+          <strong class="movement-points">+{{ movement.puntos }} pts</strong>
+        </article>
+      </div>
+    </section>
+  </section>
+</main>

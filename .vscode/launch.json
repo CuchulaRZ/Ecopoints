@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-ReciclajeApplication<reciclaje>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "backend_r.reciclaje.ReciclajeApplication",
+            "projectName": "reciclaje",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

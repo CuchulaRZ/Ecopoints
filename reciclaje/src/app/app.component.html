@@ -1,0 +1,196 @@
+@if (session.currentUser(); as user) {
+  @if (user.rol === 'ALUMNO') {
+    <app-student-dashboard (logout)="logout()" />
+  } @else if (user.rol === 'PROFESOR') {
+    <app-teacher-dashboard (logout)="logout()" />
+  } @else {
+    <main class="unsupported-dashboard">
+      <h1>Este perfil todavía no tiene un panel asignado.</h1>
+      <button class="primary-button" type="button" (click)="logout()">Cerrar sesión</button>
+    </main>
+  }
+} @else {
+<div class="page-shell">
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="EcoPoints, inicio">
+      <span class="brand-mark" aria-hidden="true">♻</span>
+      <span>Eco<b>Points</b></span>
+    </a>
+    <nav class="desktop-nav" aria-label="Navegación principal">
+      <button (click)="scrollTo('materiales')">Materiales</button>
+      <button (click)="scrollTo('juego')">Juego</button>
+      <button (click)="scrollTo('quiz')">Quiz</button>
+    </nav>
+    <button class="header-cta" type="button" (click)="loginModalOpen = true; loginError = ''">Ingresar <span>→</span></button>
+  </header>
+
+  <main>
+    <p class="api-notice" *ngIf="connectionError" role="alert">{{ connectionError }}</p>
+    <section class="hero" id="inicio">
+      <div class="hero-copy">
+        <div class="eyebrow"><span>🌱</span> Un pequeño gesto, un gran cambio</div>
+        <h1>Recicla bien.<br><em>Vive mejor.</em></h1>
+        <p>Aprende de manera divertida cómo cuidar el planeta y transforma basura en oportunidades.</p>
+        <div class="hero-actions">
+          <button class="primary-button" (click)="scrollTo('materiales')">Descubre los materiales <span>→</span></button>
+          <button class="text-button" (click)="scrollTo('quiz')">¿Listo para probarte?</button>
+        </div>
+        <div class="mini-facts">
+          <div><strong>5</strong><span>tipos de basura</span></div>
+          <div><strong>1</strong><span>gran aventura</span></div>
+          <div><strong>∞</strong><span>acciones buenas</span></div>
+        </div>
+      </div>
+
+      <div class="hero-art" aria-label="Ilustración de una planeta saludable">
+        <div class="sun">☀</div>
+        <div class="cloud cloud-one">☁</div>
+        <div class="cloud cloud-two">☁</div>
+        <div class="earth">
+          <div class="earth-land land-one"></div>
+          <div class="earth-land land-two"></div>
+          <div class="earth-land land-three"></div>
+          <span class="earth-symbol">♻</span>
+        </div>
+        <div class="floating-card card-recycle"><span>♻</span><strong>Recicla</strong><small> reutiliza</small></div>
+        <div class="floating-card card-grow"><span>🌱</span><strong>Cuida</strong><small> el planeta</small></div>
+        <div class="spark spark-one">✦</div>
+        <div class="spark spark-two">✦</div>
+        <div class="spark spark-three">✦</div>
+      </div>
+    </section>
+
+    <section class="mission-strip" aria-label="Nuestra misión">
+      <div class="mission-icon">💡</div>
+      <p><strong>El planeta es nuestro hogar.</strong> Cuando reciclamos, reducimos la basura y cuidamos el futuro de todos.</p>
+      <div class="mission-badge">¡Vamos!</div>
+    </section>
+
+    <section class="section materials-section" id="materiales">
+      <div class="section-heading centered">
+        <span class="section-kicker">Conoce los materiales</span>
+        <h2>¿Qué podemos reciclar?</h2>
+        <p>Cada objeto tiene una forma especial de cuidar el planeta.</p>
+      </div>
+      <div class="material-grid">
+        @for (material of materials; track material.name) {
+          <button class="material-card" [style.--card-color]="material.color" (click)="selectMaterial(material)">
+            <span class="material-icon" aria-hidden="true">{{ material.icon }}</span>
+            <strong>{{ material.name }}</strong>
+            <span class="material-action">Ver cómo se recicla <b>→</b></span>
+          </button>
+        }
+      </div>
+      <div class="material-detail" id="material-detail" *ngIf="selectedMaterial as material">
+        <div class="detail-icon" [style.background]="material.color">{{ material.icon }}</div>
+        <div>
+          <span class="detail-label">Tu material elegido</span>
+          <h3>{{ material.name }}</h3>
+          <p>{{ material.description }}</p>
+        </div>
+        <div class="detail-tip"><span>💡</span><p><strong>Consejo:</strong> Busca el contenedor correcto y deja que la basura siga su camino.</p></div>
+        <button class="close-detail" (click)="selectedMaterial = null" aria-label="Cerrar detalle">×</button>
+      </div>
+    </section>
+
+    <section class="section game-section" id="juego">
+      <div class="game-copy">
+        <span class="section-kicker light">Aventura de reciclaje</span>
+        <h2>Ayuda a Pip a limpiar el barrio.</h2>
+        <p>Elige los objetos correctos y descubre cómo cada uno puede hacer algo útil.</p>
+        <div class="steps" [class.complete]="challengeComplete">
+          <span [class.active]="challengeStep === 0">1</span>
+          <i></i>
+          <span [class.active]="challengeStep === 1">2</span>
+          <i></i>
+          <span [class.active]="challengeStep === 2 || challengeComplete">3</span>
+        </div>
+      </div>
+      <div class="challenge-card">
+        <div class="challenge-top">
+          <span>Reto {{ challengeStep + 1 }} de {{ challengeItems.length }}</span>
+          <span class="challenge-star">⭐</span>
+        </div>
+        <div class="challenge-illustration" aria-hidden="true">
+          <span class="bin">♻</span>
+          <span class="item">{{ challengeItems[challengeStep].icon }}</span>
+          <span class="arrow">→</span>
+        </div>
+        <h3 *ngIf="!challengeComplete">¿Qué hacemos con esto?</h3>
+        <h3 *ngIf="challengeComplete">¡Misión terminada!</h3>
+        <p *ngIf="!challengeComplete">Selecciona la respuesta correcta.</p>
+        <p *ngIf="challengeComplete">Pip te agradece que hayas aprendido a separar los residuos.</p>
+        <div class="answer-list" *ngIf="!challengeComplete">
+          @for (item of currentChallengeOptions; track item.label) {
+            <button (click)="chooseChallenge(item)" [class.correct]="item.correct" [class.incorrect]="challengeFeedback && !item.correct">
+              {{ item.icon }} {{ item.label }}
+            </button>
+          }
+        </div>
+        <p class="challenge-feedback" *ngIf="challengeFeedback" role="status">{{ challengeFeedback }}</p>
+        <button class="primary-button challenge-button" *ngIf="challengeComplete" (click)="restartChallenge()">Jugar otra vez ↻</button>
+      </div>
+    </section>
+
+    <section class="section quiz-section" id="quiz">
+      <div class="quiz-visual">
+        <div class="quiz-bubble">?</div>
+        <div class="quiz-character">🧠</div>
+        <span class="floating-note note-one">♻</span>
+        <span class="floating-note note-two">🌎</span>
+      </div>
+      <div class="quiz-content">
+        <span class="section-kicker">Mini prueba</span>
+        <h2>¿Qué basura se puede reciclar?</h2>
+        <p>Elige la respuesta correcta y consigue tu estrella.</p>
+        @if (!quizAnswered) {
+          <div class="quiz-options">
+            <button (click)="answerQuiz(false)"><span>🍌</span> Banana</button>
+            <button (click)="answerQuiz(true)"><span>🥤</span> Botella vacía</button>
+            <button (click)="answerQuiz(false)"><span>🧻</span> Teléfono roto</button>
+          </div>
+        } @else if (quizCorrect) {
+          <div class="result-card success"><span>⭐</span><div><strong>¡Correcto!</strong><p>Las botellas vacías pueden reciclarse.</p></div></div>
+          <button class="primary-button" (click)="quizAnswered = false">Try otra vez</button>
+        } @else {
+          <div class="result-card"><span>💛</span><div><strong>¡Casi!</strong><p>La banana no se recicla, pero puede convertirse en compost.</p></div></div>
+          <button class="primary-button" (click)="quizAnswered = false">Volver a intentarlo</button>
+        }
+      </div>
+    </section>
+
+    <section class="section actions-section">
+      <div class="section-heading centered">
+        <span class="section-kicker">3 acciones sencillas</span>
+        <h2>Tu día puede cambiar el planeta</h2>
+      </div>
+      <div class="action-grid">
+        <article><span class="action-number">01</span><div class="action-icon">♻</div><h3>Separar</h3><p>Clasifica los materiales antes de tirarlos.</p></article>
+        <article><span class="action-number">02</span><div class="action-icon">🌱</div><h3>Reutilizar</h3><p>Busca objetos que puedan servir para otra cosa.</p></article>
+        <article><span class="action-number">03</span><div class="action-icon">💚</div><h3>Compartir</h3><p>Cuéntale a tu familia y amigos lo que aprendiste.</p></article>
+      </div>
+    </section>
+
+    <section class="final-cta">
+      <div class="cta-leaf leaf-one">🍃</div>
+      <div class="cta-leaf leaf-two">🍃</div>
+      <span>¡El futuro empieza contigo!</span>
+      <h2>¿Listo para ser un héroe del planeta?</h2>
+      <p>Busca el contenedor adecuado y empieza hoy.</p>
+      <button (click)="scrollTo('materiales')">Aprende más <span>→</span></button>
+    </section>
+  </main>
+
+  <footer>
+    <div class="brand footer-brand"><span class="brand-mark">♻</span><span>Eco<b>Points</b></span></div>
+    <p>Aprender, cuidar y compartir. ¡El planeta te lo agradecerá!</p>
+    <span>Hecho para pequeños cuidadores del planeta.</span>
+  </footer>
+  <app-login-modal
+    *ngIf="loginModalOpen"
+    [busy]="loginBusy"
+    [errorMessage]="loginError"
+    (submitted)="login($event)"
+    (closed)="loginModalOpen = false" />
+</div>
+}
