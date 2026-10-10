@@ -1,26 +1,24 @@
+
 package backend_r.reciclaje.config;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@ConditionalOnProperty(name = "app.database.initialize-support-schema", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    name = "app.database.initialize-support-schema",
+    havingValue = "true",
+    matchIfMissing = false
+)
 @Profile("!test")
 public class SupportSchemaInitializer implements ApplicationRunner {
-    private static final Pattern CREATE_OBJECT = Pattern.compile(
-            "(?i)^\\s*CREATE\\s+(TABLE|INDEX)\\s+([A-Z0-9_$#]+)\\b");
 
     private final JdbcTemplate jdbc;
 
@@ -30,84 +28,96 @@ public class SupportSchemaInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        requireBaseTable("ALUMNO");
-        requireBaseTable("COLEGIO");
-        requireBaseTable("PROFESOR");
-        requireBaseTable("REGISTRO_PUNTOS");
-        requireBaseColumn("REGISTRO_PUNTOS", "ID_PROFESOR");
-        executeMissingObjects("db/oracle/01_auth_schema.sql");
-        executeMissingObjects("db/oracle/02_dashboard_schema.sql");
-    }
 
-    private void requireBaseColumn(String tableName, String columnName) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM USER_TAB_COLUMNS WHERE TABLE_NAME = ? AND COLUMN_NAME = ?",
-                Integer.class,
-                tableName.toUpperCase(),
-                columnName.toUpperCase());
-        if (count == null || count == 0) {
-            throw new IllegalStateException(
-                    "No existe la columna " + columnName + " en " + tableName
-                            + ". Ejecuta la migracion del esquema base de Ecopoints.");
-        }
+        System.out.println(
+            "Verificando estructura PostgreSQL de EcoPoints..."
+        );
+
+        // Comprobar las 8 tablas principales
+        requireBaseTable("colegio");
+        requireBaseTable("salon");
+        requireBaseTable("alumno");
+        requireBaseTable("profesor");
+        requireBaseTable("usuario");
+        requireBaseTable("actividad");
+        requireBaseTable("registro_puntos");
+        requireBaseTable("colegio_alumno");
+
+        // Verificar columnas necesarias
+        requireBaseColumn("alumno", "id_alumno");
+        requireBaseColumn("alumno", "id_salon");
+
+        requireBaseColumn("profesor", "id_profesor");
+        requireBaseColumn("profesor", "id_colegio");
+        requireBaseColumn("profesor", "id_salon");
+
+        requireBaseColumn("registro_puntos", "id_registro");
+        requireBaseColumn("registro_puntos", "id_alumno");
+        requireBaseColumn("registro_puntos", "id_actividad");
+        requireBaseColumn("registro_puntos", "id_profesor");
+        requireBaseColumn("registro_puntos", "puntos");
+
+        System.out.println(
+            "Verificacion completada: tablas principales disponibles."
+        );
     }
 
     private void requireBaseTable(String tableName) {
+
         if (!tableExists(tableName)) {
             throw new IllegalStateException(
-                    "No existe la tabla base " + tableName
-                            + " en el esquema conectado. Configura la conexión de Oracle al esquema de Ecopoints.");
+                "No existe la tabla " + tableName
+                + " en PostgreSQL. Verifica la base de datos Neon."
+            );
         }
     }
 
-    private void executeMissingObjects(String resourcePath) {
-        String script = readScript(resourcePath)
-                .replaceAll("(?m)^\\s*--.*(?:\\R|$)", "");
+    private void requireBaseColumn(
+        String tableName,
+        String columnName
+    ) {
 
-        for (String fragment : script.split(";")) {
-            String statement = fragment.trim();
-            if (statement.isEmpty()) {
-                continue;
-            }
+        String sql = """
+            SELECT COUNT(*)
+            FROM information_schema.columns
+            WHERE table_schema = current_schema()
+              AND table_name = ?
+              AND column_name = ?
+            """;
 
-            Matcher matcher = CREATE_OBJECT.matcher(statement);
-            if (!matcher.find()) {
-                throw new IllegalStateException(
-                        "Sentencia no soportada en el script de esquema " + resourcePath);
-            }
+        Integer count = jdbc.queryForObject(
+            sql,
+            Integer.class,
+            tableName.toLowerCase(),
+            columnName.toLowerCase()
+        );
 
-            String objectType = matcher.group(1);
-            String objectName = matcher.group(2);
-            boolean exists = "TABLE".equalsIgnoreCase(objectType)
-                    ? tableExists(objectName)
-                    : indexExists(objectName);
-            if (!exists) {
-                jdbc.execute(statement);
-            }
-        }
-    }
-
-    private String readScript(String resourcePath) {
-        try (var input = new ClassPathResource(resourcePath).getInputStream()) {
-            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException exception) {
-            throw new IllegalStateException("No se pudo leer el esquema " + resourcePath, exception);
+        if (count == null || count == 0) {
+            throw new IllegalStateException(
+                "No existe la columna "
+                + columnName
+                + " en la tabla "
+                + tableName
+            );
         }
     }
 
     private boolean tableExists(String tableName) {
-        Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM USER_TABLES WHERE TABLE_NAME = ?",
-                Integer.class,
-                tableName.toUpperCase());
-        return count != null && count > 0;
-    }
 
-    private boolean indexExists(String indexName) {
+        String sql = """
+            SELECT COUNT(*)
+            FROM information_schema.tables
+            WHERE table_schema = current_schema()
+              AND table_name = ?
+              AND table_type = 'BASE TABLE'
+            """;
+
         Integer count = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM USER_INDEXES WHERE INDEX_NAME = ?",
-                Integer.class,
-                indexName.toUpperCase());
+            sql,
+            Integer.class,
+            tableName.toLowerCase()
+        );
+
         return count != null && count > 0;
     }
 }
